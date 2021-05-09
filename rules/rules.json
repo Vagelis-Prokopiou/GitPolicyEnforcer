@@ -1,0 +1,10 @@
+{
+  "update": {
+    "branches": ["master"],
+    "title_max_length": 80,
+    "title_format": "^((\\bFOO\\b)|(\\bBAR\\b))-\\d{1,}: \\w+.*$",
+    "body_required": false,
+    "body_max_line_length": 80,
+    "enforce_squash_merge": false
+  }
+}

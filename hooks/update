@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Replace the $executable and the $rules_file variables
+# with values that match your deployment.
+executable=/home/va/projects/rust/git_policy_enforcer/target/debug/gpe
+rules_file="/home/va/projects/rust/git_policy_enforcer/rules/rules.json"
+
+# Execute the hook.
+error=$(echo "$1,$2,$3" | ${executable} --hook "$0" --rules "$rules_file")
+
+# If the $error is an empty string, everything is ok.
+if [ "$error" = "" ]; then
+  exit 0
+fi
+
+# If the $error is not an empty string, we have a validation error.
+# Print the validation error and exit with non zero exit status.
+echo "$error"
+exit 1
