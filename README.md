@@ -11,7 +11,9 @@ The tool has been developed so far for usage with self-hosted GitLab CE instance
 This is work in progress. You are welcome to contribute if this project is useful to you.
 
 ## Usage
-For now, please check the following video:
+For now, please check the following YouTube video:
+
+[Rust: GitPolicyEnforcer](https://youtu.be/CNmWKYmWAFU)
 
 According to time availability, more documentation will be added, and further development will happen.
 
