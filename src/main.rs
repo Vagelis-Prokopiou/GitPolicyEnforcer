@@ -6,6 +6,13 @@ use std::process::exit;
 use GitPolicyEnforcer::*;
 
 fn main() {
+    // Create the logging directory.
+    match create_logging_directory() {
+        Ok(()) => {}
+        Err(_e) => {} /* Todo: How to handle this? */
+    }
+
+    // Arguments stuff
     let hooks_argument = "hook";
     let rules_argument = "rules";
     let matches = clap::App::new(clap::crate_name!())
@@ -29,20 +36,16 @@ fn main() {
     let hooks_argument_value = matches.value_of(hooks_argument).unwrap_or("");
     let hook = get_hook(hooks_argument_value);
     let path = get_repo_path(hooks_argument_value);
-    // Change working directory.
     let git_repo_directory = std::path::Path::new(&path);
-    std::env::set_current_dir(&git_repo_directory);
-
-    // Create the logging directory.
-    match create_logging_directory() {
-        Ok(()) => {}
-        Err(_e) => {} /* Todo: How to handle this? */
+    match std::env::set_current_dir(&git_repo_directory) {
+        Ok(_) => {}
+        Err(_) => { let _ = log_to_file("set_current_dir failed"); }
     }
 
     // Start executing based on the hook.
     match hook {
         Hook::Invalid => {
-            log_to_file("Invalid/unsupported hook");
+            let _ = log_to_file("Invalid/unsupported hook");
             std::process::exit(1);
         }
         Hook::Update => {
@@ -51,12 +54,12 @@ fn main() {
                 Some(value) => match parse_rules(value) {
                     Ok(v) => v,
                     Err(e) => {
-                        log_to_file(&format!("!parse_rules: {}", e.to_string()));
+                        let _ = log_to_file(&format!("!parse_rules: {}", e.to_string()));
                         exit(1)
                     }
                 },
                 None => {
-                    log_to_file("No rules argument was provided");
+                    let _ = log_to_file("No rules argument was provided");
                     exit(1);
                 }
             };

@@ -21,7 +21,7 @@ pub fn validate_update_rules(
     let title_regex_validator = match regex::Regex::new(&hook_rules.title_format) {
         Ok(r) => r,
         Err(e) => {
-            log_to_file(&format!(
+            let _ = log_to_file(&format!(
                 "validate_update_rules(): Failed to compile regex: {}",
                 e
             ));
@@ -90,14 +90,14 @@ fn _get_commit(commit_hash: &str) -> String {
     {
         Ok(v) => v,
         Err(_e) => {
-            log_to_file("_get_commit(): Failed to execute git cat-file commit <commit_hash>.");
+            let _ = log_to_file("_get_commit(): Failed to execute git cat-file commit <commit_hash>.");
             exit(1);
         }
     };
     let output_string = match String::from_utf8(output.stdout) {
         Ok(v) => v,
         Err(_e) => {
-            log_to_file("_get_commit(): Failed to get utf8 string from git cat-file output");
+            let _ = log_to_file("_get_commit(): Failed to get utf8 string from git cat-file output");
             exit(1);
         }
     };
@@ -194,14 +194,14 @@ fn _get_commits_range(old_commit: &str, new_commit: &str) -> Vec<String> {
     {
         Ok(v) => v,
         Err(_e) => {
-            log_to_file("_get_commits_range(): Failed to execute git rev-list");
+            let _ = log_to_file("_get_commits_range(): Failed to execute git rev-list");
             exit(1);
         }
     };
     let output_string = match String::from_utf8(output.stdout) {
         Ok(v) => v,
         Err(_e) => {
-            log_to_file("_get_commits_range(): Failed to utf8 the git rev result");
+            let _ = log_to_file("_get_commits_range(): Failed to utf8 the git rev result");
             exit(1);
         }
     };
@@ -240,7 +240,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test__validator_title_format() {
+    fn test_validator_title_format() {
         let re = regex::Regex::new("^((\\bECSTU\\b)|(\\bINTERSCALE\\b))-\\d{1,}: \\w+.*$").unwrap();
 
         let commit_titles = vec!["ECSTU-123: This is the title description".to_owned()];
