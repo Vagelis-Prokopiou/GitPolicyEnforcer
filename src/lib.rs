@@ -71,6 +71,6 @@ mod tests {
 
     #[test]
     fn test_get_logging_directory() {
-        assert_eq!(get_logging_directory(), "./githooker".to_owned());
+        assert_eq!(get_logging_directory(), "./GitPolicyEnforcer".to_owned());
     }
 }

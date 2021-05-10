@@ -9,7 +9,7 @@ pub fn create_logging_directory() -> std::io::Result<()> {
 }
 
 pub fn get_logging_directory() -> String {
-    return "./githooker".to_owned();
+    return format!("./{}", clap::crate_name!());
 }
 
 pub fn log_to_ui(error: &str) {
