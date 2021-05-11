@@ -1,3 +1,5 @@
+[![Build status](https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer/workflows/ci/badge.svg)](https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer/actions)
+
 # GitPolicyEnforcer
 
 This is a command line utility written in [Rust](https://www.rust-lang.org/),
