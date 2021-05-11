@@ -7,10 +7,7 @@ use GitPolicyEnforcer::*;
 
 fn main() {
     // Create the logging directory.
-    match create_logging_directory() {
-        Ok(()) => {}
-        Err(_e) => {} /* Todo: How to handle this? */
-    }
+    let _ = create_logging_directory();
 
     // Arguments stuff
     let hooks_argument = "hook";

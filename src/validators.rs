@@ -155,6 +155,7 @@ fn _get_commit_title(commit: &str) -> String {
     let mut found_first_empty_line = false;
 
     for line in commit.lines() {
+        let line = line.trim();
         if line == "" && !found_first_empty_line {
             found_first_empty_line = true;
         }
@@ -269,5 +270,195 @@ mod tests {
         let commit_titles = vec!["HELLo-1: a".to_owned()];
         let result = _validator_title_format(&commit_titles, &re);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validator_title_max_length() {
+        let commit_titles = vec![
+            "Title line 1".to_owned(),
+            "Title line 2".to_owned(),
+            "Title line 3".to_owned(),
+        ];
+        let result = _validator_title_max_length(&commit_titles, 12);
+        assert!(result.is_ok());
+
+        let commit_titles = vec![
+            "Bigger title line 1".to_owned(),
+            "Title line 2".to_owned(),
+            "Title line 3".to_owned(),
+        ];
+        let result = _validator_title_max_length(&commit_titles, 12);
+        assert_eq!(result.err().unwrap(), ValidationError::TitleMaxLength(12));
+
+        let commit_titles = vec![
+            "Title line 1".to_owned(),
+            "Title line 2".to_owned(),
+            "Bigger title line 3".to_owned(),
+        ];
+        let result = _validator_title_max_length(&commit_titles, 12);
+        assert_eq!(result.err().unwrap(), ValidationError::TitleMaxLength(12));
+
+        let commit_titles = vec![];
+        let result = _validator_title_max_length(&commit_titles, 12);
+        assert!(result.is_ok())
+    }
+
+    #[test]
+    fn test_get_commit_title() {
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title 1";
+        assert_eq!(_get_commit_title(commit), "This is the commit title 1".to_owned());
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+              This is the commit title 2";
+        assert_eq!(_get_commit_title(commit), "This is the commit title 2".to_owned());
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title 3         ";
+        assert_eq!(_get_commit_title(commit), "This is the commit title 3".to_owned());
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title 4
+
+";
+        assert_eq!(_get_commit_title(commit), "This is the commit title 4".to_owned());
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title 5
+
+This is the body
+";
+        assert_eq!(_get_commit_title(commit), "This is the commit title 5".to_owned());
+    }
+
+    #[test]
+    fn test_get_commit_body() {
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title";
+        let actual = _get_commit_body(commit);
+        let expected: Vec<String> = vec![];
+        assert_eq!(actual, expected);
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title
+
+This is body line 1";
+        let actual = _get_commit_body(commit);
+        let expected: Vec<String> = vec!["This is body line 1".to_owned()];
+        assert_eq!(actual, expected);
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title
+
+This is body line 1
+
+";
+        let actual = _get_commit_body(commit);
+        let expected: Vec<String> = vec!["This is body line 1".to_owned()];
+        assert_eq!(actual, expected);
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title
+
+This is body line 1
+This is body line 2
+This is body line 3
+This is body line 4
+This is body line 5";
+        let actual = _get_commit_body(commit);
+        let expected_length = 5;
+        assert_eq!(actual.len(), expected_length);
+        assert_eq!(actual.last().unwrap(), "This is body line 5");
+
+        let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
+author John Doe <john.doe@gmail.com>
+committer John Doe <john.doe@gmail.com>
+
+This is the commit title
+
+This is body line 1
+This is body line 2
+This is body line 3
+This is body line 4
+This is body line 5
+
+              \t";
+        let actual = _get_commit_body(commit);
+        let expected_length = 5;
+        assert_eq!(actual.len(), expected_length);
+        assert_eq!(actual.last().unwrap(), "This is body line 5");
+    }
+
+    #[test]
+    fn test_validator_body_required() {
+        let commit_bodies = vec![
+            vec!["Body line 1".to_owned()],
+            vec!["Body line 1".to_owned()],
+            vec!["Body line 1".to_owned()]
+        ];
+        let result = _validator_body_required(&commit_bodies);
+        assert!(result.is_ok());
+
+        let commit_bodies = vec![
+            vec!["Body line 1".to_owned()],
+            vec!["Body line 1".to_owned()],
+            vec![]
+        ];
+        let result = _validator_body_required(&commit_bodies);
+        assert_eq!(result.err().unwrap(), ValidationError::BodyRequired);
+
+        let commit_bodies = vec![vec![]];
+        let result = _validator_body_required(&commit_bodies);
+        assert_eq!(result.err().unwrap(), ValidationError::BodyRequired);
+    }
+
+    #[test]
+    fn test_validator_body_max_line_length() {
+        let commit_bodies = vec![vec![
+            "Body line 1".to_owned(),
+            "Body line 2".to_owned(),
+            "Body line 3".to_owned(),
+        ]];
+        let result = _validator_body_max_line_length(&commit_bodies, 11);
+        assert!(result.is_ok());
+
+        let commit_bodies = vec![vec![
+            "Body line 1".to_owned(),
+            "Body line 2".to_owned(),
+            "Bigger body line 3".to_owned(),
+        ]];
+        let result = _validator_body_max_line_length(&commit_bodies, 11);
+        assert_eq!(result.err().unwrap(), ValidationError::BodyMaxLineLength(11));
+
+        let commit_bodies = vec![vec![]];
+        let result = _validator_body_max_line_length(&commit_bodies, 11);
+        assert!(result.is_ok());
     }
 }

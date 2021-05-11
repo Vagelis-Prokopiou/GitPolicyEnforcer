@@ -21,6 +21,7 @@ impl From<&str> for Hook {
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub enum ValidationError {
     TitleFormat(String),
     TitleMaxLength(u8),
