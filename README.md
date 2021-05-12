@@ -19,6 +19,21 @@ For now, please check the following YouTube video:
 
 According to time availability, more documentation will be added, and further development will happen.
 
+## Building
+You need a [Rust installation](https://www.rust-lang.org/) in order to compile it.
+
+To build GitPolicyEnforcer:
+
+```
+git clone https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer
+cd GitPolicyEnforcer
+cargo build --release
+./target/release/gpe --help
+```
+
+The produced binary is `gpe` located in the `GitPolicyEnforcer/target/release` directory.
+
+
 ## Licence
 GitPolicyEnforcer is distributed under the terms of both the [MIT license](https://opensource.org/licenses/MIT) and the [Apache License (Version 2.0)](https://www.apache.org/licenses/LICENSE-2.0).
 
