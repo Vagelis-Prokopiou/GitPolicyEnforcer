@@ -1,6 +1,7 @@
 use crate::loggers::log_to_file;
 use crate::structs::{UpdateHookData, UpdateRules, ValidationError};
 use std::process::{exit, Command};
+use std::option::Option::Some;
 
 // Public functions
 pub fn validate_update_rules(
@@ -18,6 +19,7 @@ pub fn validate_update_rules(
         _get_commits_range(&hook_data.old_commit, &hook_data.new_commit);
     let commits: Vec<String> = _get_commits(&commits_range);
     let commit_titles: Vec<String> = _get_commit_titles(&commits);
+    let commit_bodies = _get_commit_bodies(&commits);
     let title_regex_validator = match regex::Regex::new(&hook_rules.title_format) {
         Ok(r) => r,
         Err(e) => {
@@ -33,14 +35,16 @@ pub fn validate_update_rules(
     _validator_title_format(&commit_titles, &title_regex_validator)?;
     _validator_title_max_length(&commit_titles, hook_rules.title_max_length)?;
 
-    if hook_rules.body_required {
-        let commit_bodies: Vec<Vec<String>> = _get_commit_bodies(&commits);
+    if let Some(true) = hook_rules.body_required {
         _validator_body_required(&commit_bodies)?;
-        _validator_body_max_line_length(&commit_bodies, hook_rules.body_max_line_length)?;
+    };
+
+    if let Some(_) = hook_rules.body_max_line_length {
+        _validator_body_max_line_length(&commit_bodies, hook_rules.body_max_line_length.unwrap())?;
     }
 
     // Todo: Pending.
-    // if hook_rules.enforce_squash_merge {
+    // if let Some(true) = hook_rules.enforce_squash_merge {
     //     _validator_enforce_squash_merge(&commits_range)?;
     // }
 

@@ -68,9 +68,9 @@ pub struct UpdateRules {
     pub branches: Option<Vec<String>>,
     pub title_max_length: u8,
     pub title_format: String,
-    pub body_required: bool,
-    pub body_max_line_length: u8,
-    pub enforce_squash_merge: bool,
+    pub body_required: Option<bool>,
+    pub body_max_line_length: Option<u8>,
+    pub enforce_squash_merge: Option<bool>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -85,9 +85,9 @@ impl Rules {
                 branches: None,
                 title_max_length: 80,
                 title_format: "".to_owned(),
-                body_required: false,
-                body_max_line_length: 80,
-                enforce_squash_merge: false,
+                body_required: None,
+                body_max_line_length: None,
+                enforce_squash_merge: None,
             },
         };
     }
