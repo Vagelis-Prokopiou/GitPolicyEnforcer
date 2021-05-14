@@ -246,34 +246,36 @@ mod tests {
 
     #[test]
     fn test_validator_title_format() {
-        let re = regex::Regex::new("^((\\bECSTU\\b)|(\\bINTERSCALE\\b))-\\d{1,}: \\w+.*$").unwrap();
+        let regex_string = "^((\\bECSTU\\b)|(\\bINTERSCALE\\b))-\\d{1,}: \\w+.*$".to_owned();
+        let regex = regex::Regex::new(&regex_string).unwrap();
 
         let commit_titles = vec!["ECSTU-123: This is the title description".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
+        let result = _validator_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         let commit_titles = vec!["ECSTU-: This is the title description".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
-        assert!(result.is_err());
+        let result = _validator_title_format(&commit_titles, &regex);
+        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
 
         let commit_titles = vec!["ECSTU-1:    ".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
-        assert!(result.is_err());
+        let result = _validator_title_format(&commit_titles, &regex);
+        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
 
         let commit_titles = vec!["ECSTU-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
+        let result = _validator_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         // New regex
-        let re = regex::Regex::new("^[A-Z]+-\\d{1,}: \\w+.*$").unwrap();
+        let regex_string = "^[A-Z]+-\\d{1,}: \\w+.*$".to_owned();
+        let regex = regex::Regex::new(&regex_string).unwrap();
 
         let commit_titles = vec!["HELLO-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
+        let result = _validator_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         let commit_titles = vec!["HELLo-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &re);
-        assert!(result.is_err());
+        let result = _validator_title_format(&commit_titles, &regex);
+        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
     }
 
     #[test]
