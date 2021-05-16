@@ -3,8 +3,14 @@ name = "GitPolicyEnforcer"
 version = "0.2.0"
 authors = ["Vagelis Prokopiou <vagelis.prokopiou@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "GitPolicyEnforcer is a command-line tool that helps you enforce Git policies through Git hooks, both server and client side"
+documentation = "https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer"
+homepage = "https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer"
+repository = "https://github.com/Vagelis-Prokopiou/GitPolicyEnforcer"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+categories = ["command-line-utilities"]
+keywords = ["git", "git_hooks", "hooks", "policy", "policies"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
