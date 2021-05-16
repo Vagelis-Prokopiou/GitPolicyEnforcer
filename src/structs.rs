@@ -28,6 +28,7 @@ pub enum ValidationError {
     BodyRequired,
     BodyMaxLineLength(u8),
     EnforceSquashMerge,
+    RegexCompilation(String),
 }
 
 impl std::fmt::Display for ValidationError {
@@ -58,6 +59,11 @@ impl std::fmt::Display for ValidationError {
                 f,
                 "{}Body missing from commit(s). Ensure that all commits contain a commit body.",
                 common_message_part
+            ),
+            Self::RegexCompilation(regex) => write!(
+                f,
+                "Regex \"{}\" failed to be created",
+                regex
             ),
         }
     }

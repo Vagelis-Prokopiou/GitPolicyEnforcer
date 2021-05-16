@@ -1,7 +1,8 @@
 use crate::loggers::log_to_file;
 use crate::structs::{UpdateHookData, UpdateRules, ValidationError};
-use std::process::{exit, Command};
+use regex::Regex;
 use std::option::Option::Some;
+use std::process::{exit, Command};
 
 // Public functions
 pub fn validate_update_rules(
@@ -10,7 +11,12 @@ pub fn validate_update_rules(
 ) -> Result<(), ValidationError> {
     if hook_rules.branches.is_some() {
         // Do not run any validation if the current branch is not in the list of provided branches.
-        if !hook_rules.branches.as_ref().unwrap().contains(&hook_data.branch) {
+        if !hook_rules
+            .branches
+            .as_ref()
+            .unwrap()
+            .contains(&hook_data.branch)
+        {
             return Ok(());
         }
     }
@@ -20,27 +26,19 @@ pub fn validate_update_rules(
     let commits: Vec<String> = _get_commits(&commits_range);
     let commit_titles: Vec<String> = _get_commit_titles(&commits);
     let commit_bodies = _get_commit_bodies(&commits);
-    let title_regex_validator = match regex::Regex::new(&hook_rules.title_format) {
-        Ok(r) => r,
-        Err(e) => {
-            let _ = log_to_file(&format!(
-                "validate_update_rules(): Failed to compile regex: {}",
-                e
-            ));
-            exit(1);
-        }
-    };
+
+    let title_regex_validator = create_regex(&hook_rules.title_format)?;
 
     // Title related validations.
-    _validator_title_format(&commit_titles, &title_regex_validator)?;
-    _validator_title_max_length(&commit_titles, hook_rules.title_max_length)?;
+    validate_title_format(&commit_titles, &title_regex_validator)?;
+    _validate_title_max_length(&commit_titles, hook_rules.title_max_length)?;
 
     if let Some(true) = hook_rules.body_required {
-        _validator_body_required(&commit_bodies)?;
+        _validate_body_required(&commit_bodies)?;
     };
 
     if let Some(_) = hook_rules.body_max_line_length {
-        _validator_body_max_line_length(&commit_bodies, hook_rules.body_max_line_length.unwrap())?;
+        _validate_body_max_line_length(&commit_bodies, hook_rules.body_max_line_length.unwrap())?;
     }
 
     // Todo: Pending.
@@ -51,8 +49,17 @@ pub fn validate_update_rules(
     return Ok(());
 }
 
+pub fn create_regex(regex_str: &str) -> Result<Regex, crate::ValidationError> {
+    return match regex::Regex::new(regex_str) {
+        Ok(r) => Ok(r),
+        Err(_) => Err(crate::ValidationError::RegexCompilation(
+            regex_str.to_owned(),
+        )),
+    };
+}
+
 // Private functions.
-fn _validator_title_format(
+pub fn validate_title_format(
     commit_titles: &Vec<String>,
     regex_validator: &regex::Regex,
 ) -> Result<(), ValidationError> {
@@ -68,7 +75,7 @@ fn _validator_title_format(
     return Ok(());
 }
 
-fn _validator_body_required(commit_bodies: &Vec<Vec<String>>) -> Result<(), ValidationError> {
+fn _validate_body_required(commit_bodies: &Vec<Vec<String>>) -> Result<(), ValidationError> {
     for commit_body in commit_bodies {
         if commit_body.len() == 0 {
             return Err(ValidationError::BodyRequired);
@@ -94,14 +101,16 @@ fn _get_commit(commit_hash: &str) -> String {
     {
         Ok(v) => v,
         Err(_e) => {
-            let _ = log_to_file("_get_commit(): Failed to execute git cat-file commit <commit_hash>.");
+            let _ =
+                log_to_file("_get_commit(): Failed to execute git cat-file commit <commit_hash>.");
             exit(1);
         }
     };
     let output_string = match String::from_utf8(output.stdout) {
         Ok(v) => v,
         Err(_e) => {
-            let _ = log_to_file("_get_commit(): Failed to get utf8 string from git cat-file output");
+            let _ =
+                log_to_file("_get_commit(): Failed to get utf8 string from git cat-file output");
             exit(1);
         }
     };
@@ -172,7 +181,7 @@ fn _get_commit_title(commit: &str) -> String {
     return title.to_owned();
 }
 
-fn _validator_title_max_length(
+fn _validate_title_max_length(
     commit_titles: &Vec<String>,
     max_title_length: u8,
 ) -> Result<(), ValidationError> {
@@ -224,7 +233,7 @@ fn _validator_enforce_squash_merge(commits_range: &Vec<String>) -> Result<(), Va
     return Ok(());
 }
 
-fn _validator_body_max_line_length(
+fn _validate_body_max_line_length(
     commit_bodies: &Vec<Vec<String>>,
     body_max_line_length: u8,
 ) -> Result<(), ValidationError> {
@@ -250,19 +259,25 @@ mod tests {
         let regex = regex::Regex::new(&regex_string).unwrap();
 
         let commit_titles = vec!["ECSTU-123: This is the title description".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
+        let result = validate_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         let commit_titles = vec!["ECSTU-: This is the title description".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
-        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
+        let result = validate_title_format(&commit_titles, &regex);
+        assert_eq!(
+            result.err().unwrap(),
+            ValidationError::TitleFormat(regex_string.clone())
+        );
 
         let commit_titles = vec!["ECSTU-1:    ".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
-        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
+        let result = validate_title_format(&commit_titles, &regex);
+        assert_eq!(
+            result.err().unwrap(),
+            ValidationError::TitleFormat(regex_string.clone())
+        );
 
         let commit_titles = vec!["ECSTU-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
+        let result = validate_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         // New regex
@@ -270,12 +285,15 @@ mod tests {
         let regex = regex::Regex::new(&regex_string).unwrap();
 
         let commit_titles = vec!["HELLO-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
+        let result = validate_title_format(&commit_titles, &regex);
         assert!(result.is_ok());
 
         let commit_titles = vec!["HELLo-1: a".to_owned()];
-        let result = _validator_title_format(&commit_titles, &regex);
-        assert_eq!(result.err().unwrap(), ValidationError::TitleFormat(regex_string.clone()));
+        let result = validate_title_format(&commit_titles, &regex);
+        assert_eq!(
+            result.err().unwrap(),
+            ValidationError::TitleFormat(regex_string.clone())
+        );
     }
 
     #[test]
@@ -285,7 +303,7 @@ mod tests {
             "Title line 2".to_owned(),
             "Title line 3".to_owned(),
         ];
-        let result = _validator_title_max_length(&commit_titles, 12);
+        let result = _validate_title_max_length(&commit_titles, 12);
         assert!(result.is_ok());
 
         let commit_titles = vec![
@@ -293,7 +311,7 @@ mod tests {
             "Title line 2".to_owned(),
             "Title line 3".to_owned(),
         ];
-        let result = _validator_title_max_length(&commit_titles, 12);
+        let result = _validate_title_max_length(&commit_titles, 12);
         assert_eq!(result.err().unwrap(), ValidationError::TitleMaxLength(12));
 
         let commit_titles = vec![
@@ -301,11 +319,11 @@ mod tests {
             "Title line 2".to_owned(),
             "Bigger title line 3".to_owned(),
         ];
-        let result = _validator_title_max_length(&commit_titles, 12);
+        let result = _validate_title_max_length(&commit_titles, 12);
         assert_eq!(result.err().unwrap(), ValidationError::TitleMaxLength(12));
 
         let commit_titles = vec![];
-        let result = _validator_title_max_length(&commit_titles, 12);
+        let result = _validate_title_max_length(&commit_titles, 12);
         assert!(result.is_ok())
     }
 
@@ -316,21 +334,30 @@ author John Doe <john.doe@gmail.com>
 committer John Doe <john.doe@gmail.com>
 
 This is the commit title 1";
-        assert_eq!(_get_commit_title(commit), "This is the commit title 1".to_owned());
+        assert_eq!(
+            _get_commit_title(commit),
+            "This is the commit title 1".to_owned()
+        );
 
         let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
 author John Doe <john.doe@gmail.com>
 committer John Doe <john.doe@gmail.com>
 
               This is the commit title 2";
-        assert_eq!(_get_commit_title(commit), "This is the commit title 2".to_owned());
+        assert_eq!(
+            _get_commit_title(commit),
+            "This is the commit title 2".to_owned()
+        );
 
         let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
 author John Doe <john.doe@gmail.com>
 committer John Doe <john.doe@gmail.com>
 
 This is the commit title 3         ";
-        assert_eq!(_get_commit_title(commit), "This is the commit title 3".to_owned());
+        assert_eq!(
+            _get_commit_title(commit),
+            "This is the commit title 3".to_owned()
+        );
 
         let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
 author John Doe <john.doe@gmail.com>
@@ -339,7 +366,10 @@ committer John Doe <john.doe@gmail.com>
 This is the commit title 4
 
 ";
-        assert_eq!(_get_commit_title(commit), "This is the commit title 4".to_owned());
+        assert_eq!(
+            _get_commit_title(commit),
+            "This is the commit title 4".to_owned()
+        );
 
         let commit = "tree d6b3dd4b08f63ba13479484508e0679d32a7891a
 author John Doe <john.doe@gmail.com>
@@ -349,7 +379,10 @@ This is the commit title 5
 
 This is the body
 ";
-        assert_eq!(_get_commit_title(commit), "This is the commit title 5".to_owned());
+        assert_eq!(
+            _get_commit_title(commit),
+            "This is the commit title 5".to_owned()
+        );
     }
 
     #[test]
@@ -427,21 +460,21 @@ This is body line 5
         let commit_bodies = vec![
             vec!["Body line 1".to_owned()],
             vec!["Body line 1".to_owned()],
-            vec!["Body line 1".to_owned()]
+            vec!["Body line 1".to_owned()],
         ];
-        let result = _validator_body_required(&commit_bodies);
+        let result = _validate_body_required(&commit_bodies);
         assert!(result.is_ok());
 
         let commit_bodies = vec![
             vec!["Body line 1".to_owned()],
             vec!["Body line 1".to_owned()],
-            vec![]
+            vec![],
         ];
-        let result = _validator_body_required(&commit_bodies);
+        let result = _validate_body_required(&commit_bodies);
         assert_eq!(result.err().unwrap(), ValidationError::BodyRequired);
 
         let commit_bodies = vec![vec![]];
-        let result = _validator_body_required(&commit_bodies);
+        let result = _validate_body_required(&commit_bodies);
         assert_eq!(result.err().unwrap(), ValidationError::BodyRequired);
     }
 
@@ -452,7 +485,7 @@ This is body line 5
             "Body line 2".to_owned(),
             "Body line 3".to_owned(),
         ]];
-        let result = _validator_body_max_line_length(&commit_bodies, 11);
+        let result = _validate_body_max_line_length(&commit_bodies, 11);
         assert!(result.is_ok());
 
         let commit_bodies = vec![vec![
@@ -460,11 +493,14 @@ This is body line 5
             "Body line 2".to_owned(),
             "Bigger body line 3".to_owned(),
         ]];
-        let result = _validator_body_max_line_length(&commit_bodies, 11);
-        assert_eq!(result.err().unwrap(), ValidationError::BodyMaxLineLength(11));
+        let result = _validate_body_max_line_length(&commit_bodies, 11);
+        assert_eq!(
+            result.err().unwrap(),
+            ValidationError::BodyMaxLineLength(11)
+        );
 
         let commit_bodies = vec![vec![]];
-        let result = _validator_body_max_line_length(&commit_bodies, 11);
+        let result = _validate_body_max_line_length(&commit_bodies, 11);
         assert!(result.is_ok());
     }
 }

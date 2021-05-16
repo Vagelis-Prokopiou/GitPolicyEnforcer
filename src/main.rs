@@ -10,12 +10,28 @@ fn main() {
     let _ = create_logging_directory();
 
     // Arguments stuff
+    let regex_argument = "regex";
+    let regex_argument_value = "regex-value";
     let hooks_argument = "hook";
     let rules_argument = "rules";
     let matches = clap::App::new(clap::crate_name!())
         .version(clap::crate_version!())
         .author(clap::crate_authors!("\n"))
         .about("A Rust CLI tool that helps you enforce Git policies through Git hooks both server and client side.")
+        .arg(
+            clap::Arg::with_name(regex_argument)
+                .long(regex_argument)
+                .requires(regex_argument_value)
+                .takes_value(true)
+                .help("A regex (for testing)")
+        )
+        .arg(
+            clap::Arg::with_name(regex_argument_value)
+                .long(regex_argument_value)
+                .requires(regex_argument)
+                .takes_value(true)
+                .help("A regex value (for testing)")
+        )
         .arg(
             clap::Arg::with_name(rules_argument)
                 .long(rules_argument)
@@ -30,13 +46,39 @@ fn main() {
         )
         .get_matches();
 
+    // Functionality of on the fly validation.
+    let regex_str = matches.value_of(regex_argument);
+    if let Some(regex_str) = regex_str {
+        let value_to_test = vec![matches.value_of(regex_argument_value).unwrap().to_owned()];
+        let regex = create_regex(regex_str);
+        if let Err(e) = regex {
+            println!("\nValidation failed at regex compilation: {}\n", e);
+            exit(0);
+        }
+        let regex = regex.unwrap();
+        let validation_result = validate_title_format(&value_to_test, &regex);
+        if let Err(_) = validation_result {
+            println!(
+                "\nValidation failed: Value \"{}\" failed to validate against regex \"{}\"\n",
+                &value_to_test[0], &regex
+            );
+        } else {
+            println!("Validation succeeded");
+        }
+        exit(0);
+    }
+    // Functionality of on the fly validation end.
+
+    // Start executing the actual program.
     let hooks_argument_value = matches.value_of(hooks_argument).unwrap_or("");
     let hook = get_hook(hooks_argument_value);
     let path = get_repo_path(hooks_argument_value);
     let git_repo_directory = std::path::Path::new(&path);
     match std::env::set_current_dir(&git_repo_directory) {
         Ok(_) => {}
-        Err(_) => { let _ = log_to_file("set_current_dir failed"); }
+        Err(_) => {
+            let _ = log_to_file("set_current_dir failed");
+        }
     }
 
     // Start executing based on the hook.

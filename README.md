@@ -19,6 +19,25 @@ For now, please check the following YouTube video:
 
 According to time availability, more documentation will be added, and further development will happen.
 
+## On the fly regex validation
+
+You can quickly test you regexes both for successful regex creation and value validation, before deploying by using the respective feature. Example usage:
+
+Expected to succeed:
+```shell
+gpe --regex --regex '^\d test$' --regex-value '1 test'
+```
+
+Expected to fail at value validation:
+```shell
+gpe --regex --regex '^\d test$' --regex-value 'hello world'
+```
+
+Expected to fail during regex creation:
+```shell
+gpe --regex '^\e{1,1}$' --regex-value 'hello world'
+```
+
 ## Building
 You need a [Rust installation](https://www.rust-lang.org/) in order to compile it.
 
