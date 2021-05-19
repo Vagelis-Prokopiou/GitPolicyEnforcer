@@ -25,12 +25,12 @@ You can quickly test you regexes both for successful regex creation and value va
 
 Expected to succeed:
 ```shell
-gpe --regex --regex '^\d test$' --regex-value '1 test'
+gpe --regex '^\d test$' --regex-value '1 test'
 ```
 
 Expected to fail at value validation:
 ```shell
-gpe --regex --regex '^\d test$' --regex-value 'hello world'
+gpe --regex '^\d test$' --regex-value 'hello world'
 ```
 
 Expected to fail during regex creation:
