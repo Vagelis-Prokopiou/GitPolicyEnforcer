@@ -37,3 +37,13 @@ pub fn log_to_file(message: &str) -> std::io::Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_logging_directory() {
+        assert_eq!(get_logging_directory(), "./GitPolicyEnforcer".to_owned());
+    }
+}

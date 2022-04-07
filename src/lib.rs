@@ -48,7 +48,6 @@ pub fn get_repo_path(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::loggers::get_logging_directory;
 
     #[test]
     fn test_get_path() {
@@ -66,10 +65,5 @@ mod tests {
             get_repo_path(path_str),
             "/var/opt/gitlab/git-data/repositories/@hashed/4b/22/4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a.git"
         );
-    }
-
-    #[test]
-    fn test_get_logging_directory() {
-        assert_eq!(get_logging_directory(), "./GitPolicyEnforcer".to_owned());
     }
 }
