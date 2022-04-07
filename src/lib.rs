@@ -42,7 +42,7 @@ pub fn get_stdin_data() -> String {
 pub fn get_repo_path(input: &str) -> String {
     // Remove everything after .git, if exists and return the first part.
     let parts: Vec<&str> = input.split(".git").collect();
-    return format!("{}.git", parts[0]);
+    format!("{}.git", parts[0])
 }
 
 #[cfg(test)]
