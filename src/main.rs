@@ -14,32 +14,32 @@ fn main() {
     let regex_argument_value = "regex-value";
     let hooks_argument = "hook";
     let rules_argument = "rules";
-    let matches = clap::App::new(clap::crate_name!())
+    let matches = clap::Command::new(clap::crate_name!())
         .version(clap::crate_version!())
         .author(clap::crate_authors!("\n"))
         .about("A Rust CLI tool that helps you enforce Git policies through Git hooks both server and client side.")
         .arg(
-            clap::Arg::with_name(regex_argument)
+            clap::Arg::new(regex_argument)
                 .long(regex_argument)
                 .requires(regex_argument_value)
                 .takes_value(true)
                 .help("A regex (for testing)")
         )
         .arg(
-            clap::Arg::with_name(regex_argument_value)
+            clap::Arg::new(regex_argument_value)
                 .long(regex_argument_value)
                 .requires(regex_argument)
                 .takes_value(true)
                 .help("A regex value (for testing)")
         )
         .arg(
-            clap::Arg::with_name(rules_argument)
+            clap::Arg::new(rules_argument)
                 .long(rules_argument)
                 .help("The json file that contains the rules")
                 .takes_value(true),
         )
         .arg(
-            clap::Arg::with_name(hooks_argument)
+            clap::Arg::new(hooks_argument)
                 .long(hooks_argument)
                 .help("The first ($0) argument of the executing hook script")
                 .takes_value(true),
