@@ -15,7 +15,7 @@ pub fn parse_rules<P: AsRef<Path>>(path: P) -> Result<Rules, Box<dyn Error>> {
 
     // Read the JSON contents of the file as an instance of `User`.
     let rules: Rules = serde_json::from_reader(reader)?;
-    return Ok(rules);
+    Ok(rules)
 }
 
 pub fn get_hook(path: &str) -> Hook {
@@ -24,11 +24,10 @@ pub fn get_hook(path: &str) -> Hook {
         .split('/')
         .collect::<Vec<&str>>()
         .iter()
-        .filter(|value| **value != "")
-        .map(|value| *value)
+        .filter(|value| !value.is_empty())
+        .copied()
         .collect();
-
-    return Hook::from(*parts.last().unwrap_or(&""));
+    Hook::from(*parts.last().unwrap_or(&""))
 }
 
 pub fn get_stdin_data() -> String {
@@ -36,8 +35,8 @@ pub fn get_stdin_data() -> String {
     let stdin = std::io::stdin();
     let mut stdin_handle = stdin.lock();
     stdin_handle.read_to_string(&mut stdin_input).unwrap();
-    stdin_input = stdin_input.replace("\n", "");
-    return stdin_input;
+    stdin_input = stdin_input.replace('\n', "");
+    stdin_input
 }
 
 pub fn get_repo_path(input: &str) -> String {

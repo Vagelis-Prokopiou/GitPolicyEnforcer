@@ -57,7 +57,7 @@ fn main() {
         }
         let regex = regex.unwrap();
         let validation_result = validate_title_format(&value_to_test, &regex);
-        if let Err(_) = validation_result {
+        if validation_result.is_err() {
             println!(
                 "\nValidation failed: Value \"{}\" failed to validate against regex \"{}\"\n",
                 &value_to_test[0], &regex
@@ -93,7 +93,7 @@ fn main() {
                 Some(value) => match parse_rules(value) {
                     Ok(v) => v,
                     Err(e) => {
-                        let _ = log_to_file(&format!("!parse_rules: {}", e.to_string()));
+                        let _ = log_to_file(&format!("!parse_rules: {}", e));
                         exit(1)
                     }
                 },

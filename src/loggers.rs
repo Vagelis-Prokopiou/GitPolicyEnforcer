@@ -5,7 +5,7 @@ pub fn create_logging_directory() -> std::io::Result<()> {
     if !std::path::Path::new(logging_directory.as_str()).is_dir() {
         std::fs::create_dir(logging_directory)?;
     }
-    return Ok(());
+    Ok(())
 }
 
 pub fn get_logging_directory() -> String {
@@ -19,11 +19,7 @@ pub fn log_to_ui(error: &str) {
 // This function is used for logging.
 pub fn log_to_file(message: &str) -> std::io::Result<()> {
     let dt = chrono::Utc::now();
-    let message = format!(
-        "{}: {}",
-        dt.format("%Y-%m-%dT%H:%M:%S").to_string(),
-        message
-    );
+    let message = format!("{}: {}", dt.format("%Y-%m-%dT%H:%M:%S"), message);
     let logging_directory_file = format!("{}/error.log", get_logging_directory());
     let path = std::path::Path::new(logging_directory_file.as_str());
     let mut file = if path.exists() {
@@ -37,7 +33,7 @@ pub fn log_to_file(message: &str) -> std::io::Result<()> {
             .create(true)
             .open(logging_directory_file)?
     };
-    file.write(format!("{}\n", message).as_ref())?;
+    file.write_all(format!("{}\n", message).as_ref())?;
 
-    return Ok(());
+    Ok(())
 }

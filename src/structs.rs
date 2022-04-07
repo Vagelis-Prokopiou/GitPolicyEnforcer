@@ -2,18 +2,12 @@ use crate::traits::HookData;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub enum Hook {
-    Update,
-    Invalid,
-}
+pub enum Hook { Update, Invalid }
 
 impl From<&str> for Hook {
     fn from(path: &str) -> Self {
         let parts: Vec<&str> = path.split('/').collect();
-        if parts.len() == 0 {
-            return Self::Invalid;
-        }
-
+        if parts.is_empty() { return Self::Invalid; }
         match *parts.last().unwrap() {
             "update" => Self::Update,
             _ => Self::Invalid,
@@ -86,7 +80,7 @@ pub struct Rules {
 
 impl Rules {
     pub fn new() -> Self {
-        return Self {
+        Self {
             update: UpdateRules {
                 branches: None,
                 title_max_length: 80,
@@ -95,9 +89,11 @@ impl Rules {
                 body_max_line_length: None,
                 enforce_squash_merge: None,
             },
-        };
+        }
     }
 }
+
+impl Default for Rules { fn default() -> Self { Self::new() } }
 
 // Structs and implementations related to the Git hooks.
 #[derive(Deserialize, Debug)]
@@ -113,10 +109,6 @@ impl HookData for UpdateHookData {
         let branch = parts[0].replace("refs/heads/", "");
         let old_commit = parts[1].to_owned();
         let new_commit = parts[2].to_owned();
-        return Self {
-            branch,
-            new_commit,
-            old_commit,
-        };
+        Self { branch, new_commit, old_commit }
     }
 }

@@ -1,7 +1,6 @@
 use crate::loggers::log_to_file;
 use crate::structs::{UpdateHookData, UpdateRules, ValidationError};
 use regex::Regex;
-use std::option::Option::Some;
 use std::process::{exit, Command};
 
 // Public functions
@@ -33,11 +32,11 @@ pub fn validate_update_rules(
     validate_title_format(&commit_titles, &title_regex_validator)?;
     _validate_title_max_length(&commit_titles, hook_rules.title_max_length)?;
 
-    if let Some(true) = hook_rules.body_required {
+    if hook_rules.body_required.is_some() {
         _validate_body_required(&commit_bodies)?;
     };
 
-    if let Some(_) = hook_rules.body_max_line_length {
+    if hook_rules.body_max_line_length.is_some() {
         _validate_body_max_line_length(&commit_bodies, hook_rules.body_max_line_length.unwrap())?;
     }
 
@@ -46,21 +45,21 @@ pub fn validate_update_rules(
     //     _validator_enforce_squash_merge(&commits_range)?;
     // }
 
-    return Ok(());
+    Ok(())
 }
 
 pub fn create_regex(regex_str: &str) -> Result<Regex, crate::ValidationError> {
-    return match regex::Regex::new(regex_str) {
+    match regex::Regex::new(regex_str) {
         Ok(r) => Ok(r),
         Err(_) => Err(crate::ValidationError::RegexCompilation(
             regex_str.to_owned(),
         )),
-    };
+    }
 }
 
 // Private functions.
 pub fn validate_title_format(
-    commit_titles: &Vec<String>,
+    commit_titles: &[String],
     regex_validator: &regex::Regex,
 ) -> Result<(), ValidationError> {
     for commit_title in commit_titles {
@@ -72,23 +71,23 @@ pub fn validate_title_format(
         }
     }
 
-    return Ok(());
+    Ok(())
 }
 
-fn _validate_body_required(commit_bodies: &Vec<Vec<String>>) -> Result<(), ValidationError> {
+fn _validate_body_required(commit_bodies: &[Vec<String>]) -> Result<(), ValidationError> {
     for commit_body in commit_bodies {
-        if commit_body.len() == 0 {
+        if commit_body.is_empty() {
             return Err(ValidationError::BodyRequired);
         }
     }
-    return Ok(());
+    Ok(())
 }
 
-fn _get_commits(commits_range: &Vec<String>) -> Vec<String> {
-    return commits_range
+fn _get_commits(commits_range: &[String]) -> Vec<String> {
+    commits_range
         .iter()
         .map(|commit_hash| _get_commit(commit_hash))
-        .collect();
+        .collect()
 }
 
 /// Extracts the full commit, from a commit hash.
@@ -106,19 +105,18 @@ fn _get_commit(commit_hash: &str) -> String {
             exit(1);
         }
     };
-    let output_string = match String::from_utf8(output.stdout) {
+
+    match String::from_utf8(output.stdout) {
         Ok(v) => v,
         Err(_e) => {
             let _ =
                 log_to_file("_get_commit(): Failed to get utf8 string from git cat-file output");
             exit(1);
         }
-    };
-
-    return output_string;
+    }
 }
 
-fn _get_commit_bodies(commits: &Vec<String>) -> Vec<Vec<String>> {
+fn _get_commit_bodies(commits: &[String]) -> Vec<Vec<String>> {
     return commits
         .iter()
         .map(|commit_hash| _get_commit_body(commit_hash))
@@ -136,30 +134,30 @@ fn _get_commit_body(commit: &str) -> Vec<String> {
     for line in commit.lines() {
         let line = line.trim();
 
-        if line == "" && !first_empty_line_found {
+        if line.is_empty() && !first_empty_line_found {
             first_empty_line_found = true;
             continue;
         }
 
-        if line == "" && first_empty_line_found {
+        if line.is_empty() && first_empty_line_found {
             second_empty_line_found = true;
             continue;
         }
 
-        if line != "" && second_empty_line_found {
+        if !line.is_empty() && second_empty_line_found {
             body_lines.push(line.to_owned());
             continue;
         }
     }
 
-    return body_lines;
+    body_lines
 }
 
-fn _get_commit_titles(commits: &Vec<String>) -> Vec<String> {
-    return commits
+fn _get_commit_titles(commits: &[String]) -> Vec<String> {
+    commits
         .iter()
         .map(|commit| _get_commit_title(commit))
-        .collect();
+        .collect()
 }
 
 /// Extracts the commit title from a full commit message.
@@ -169,20 +167,20 @@ fn _get_commit_title(commit: &str) -> String {
 
     for line in commit.lines() {
         let line = line.trim();
-        if line == "" && !found_first_empty_line {
+        if line.is_empty() && !found_first_empty_line {
             found_first_empty_line = true;
         }
-        if line != "" && found_first_empty_line {
+        if !line.is_empty() && found_first_empty_line {
             title = line;
             break;
         }
     }
 
-    return title.to_owned();
+    title.to_owned()
 }
 
 fn _validate_title_max_length(
-    commit_titles: &Vec<String>,
+    commit_titles: &[String],
     max_title_length: u8,
 ) -> Result<(), ValidationError> {
     for title in commit_titles.iter() {
@@ -191,7 +189,7 @@ fn _validate_title_max_length(
             return Err(ValidationError::TitleMaxLength(max_title_length));
         }
     }
-    return Ok(());
+    Ok(())
 }
 
 fn _get_commits_range(old_commit: &str, new_commit: &str) -> Vec<String> {
@@ -219,22 +217,22 @@ fn _get_commits_range(old_commit: &str, new_commit: &str) -> Vec<String> {
             exit(1);
         }
     };
-    return output_string
+    output_string
         .lines()
         .into_iter()
         .map(|line| line.to_owned())
-        .collect();
+        .collect()
 }
 
-fn _validator_enforce_squash_merge(commits_range: &Vec<String>) -> Result<(), ValidationError> {
+fn _validator_enforce_squash_merge(commits_range: &[String]) -> Result<(), ValidationError> {
     if commits_range.len() > 1 {
         return Err(ValidationError::EnforceSquashMerge);
     }
-    return Ok(());
+    Ok(())
 }
 
 fn _validate_body_max_line_length(
-    commit_bodies: &Vec<Vec<String>>,
+    commit_bodies: &[Vec<String>],
     body_max_line_length: u8,
 ) -> Result<(), ValidationError> {
     for commit_body in commit_bodies {
@@ -246,7 +244,7 @@ fn _validate_body_max_line_length(
         }
     }
 
-    return Ok(());
+    Ok(())
 }
 
 #[cfg(test)]
