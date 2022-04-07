@@ -117,10 +117,10 @@ fn _get_commit(commit_hash: &str) -> String {
 }
 
 fn _get_commit_bodies(commits: &[String]) -> Vec<Vec<String>> {
-    return commits
+    commits
         .iter()
         .map(|commit_hash| _get_commit_body(commit_hash))
-        .collect();
+        .collect()
 }
 
 /// Extracts the commit body from a full commit.
