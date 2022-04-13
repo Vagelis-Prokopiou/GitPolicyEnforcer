@@ -1,3 +1,5 @@
+#![allow(clippy::needless_return)]
+
 pub mod loggers;
 pub mod structs;
 pub mod traits;
@@ -15,7 +17,7 @@ pub fn parse_rules<P: AsRef<Path>>(path: P) -> Result<Rules, Box<dyn Error>> {
 
     // Read the JSON contents of the file as an instance of `User`.
     let rules: Rules = serde_json::from_reader(reader)?;
-    Ok(rules)
+    return Ok(rules);
 }
 
 pub fn get_hook(path: &str) -> Hook {
