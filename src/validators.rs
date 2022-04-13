@@ -45,7 +45,7 @@ pub fn validate_update_rules(
     //     _validator_enforce_squash_merge(&commits_range)?;
     // }
 
-    Ok(())
+    return Ok(());
 }
 
 pub fn create_regex(regex_str: &str) -> Result<Regex, crate::ValidationError> {
@@ -71,7 +71,7 @@ pub fn validate_title_format(
         }
     }
 
-    Ok(())
+    return Ok(());
 }
 
 fn _validate_body_required(commit_bodies: &[Vec<String>]) -> Result<(), ValidationError> {
@@ -80,14 +80,14 @@ fn _validate_body_required(commit_bodies: &[Vec<String>]) -> Result<(), Validati
             return Err(ValidationError::BodyRequired);
         }
     }
-    Ok(())
+    return Ok(());
 }
 
 fn _get_commits(commits_range: &[String]) -> Vec<String> {
-    commits_range
+    return commits_range
         .iter()
         .map(|commit_hash| _get_commit(commit_hash))
-        .collect()
+        .collect();
 }
 
 /// Extracts the full commit, from a commit hash.
@@ -117,10 +117,10 @@ fn _get_commit(commit_hash: &str) -> String {
 }
 
 fn _get_commit_bodies(commits: &[String]) -> Vec<Vec<String>> {
-    commits
+    return commits
         .iter()
         .map(|commit_hash| _get_commit_body(commit_hash))
-        .collect()
+        .collect();
 }
 
 /// Extracts the commit body from a full commit.
@@ -150,14 +150,14 @@ fn _get_commit_body(commit: &str) -> Vec<String> {
         }
     }
 
-    body_lines
+    return body_lines;
 }
 
 fn _get_commit_titles(commits: &[String]) -> Vec<String> {
-    commits
+    return commits
         .iter()
         .map(|commit| _get_commit_title(commit))
-        .collect()
+        .collect();
 }
 
 /// Extracts the commit title from a full commit message.
@@ -176,7 +176,7 @@ fn _get_commit_title(commit: &str) -> String {
         }
     }
 
-    title.to_owned()
+    return title.to_owned();
 }
 
 fn _validate_title_max_length(
@@ -189,7 +189,7 @@ fn _validate_title_max_length(
             return Err(ValidationError::TitleMaxLength(max_title_length));
         }
     }
-    Ok(())
+    return Ok(());
 }
 
 fn _get_commits_range(old_commit: &str, new_commit: &str) -> Vec<String> {
@@ -217,18 +217,18 @@ fn _get_commits_range(old_commit: &str, new_commit: &str) -> Vec<String> {
             exit(1);
         }
     };
-    output_string
+    return output_string
         .lines()
         .into_iter()
         .map(|line| line.to_owned())
-        .collect()
+        .collect();
 }
 
 fn _validator_enforce_squash_merge(commits_range: &[String]) -> Result<(), ValidationError> {
     if commits_range.len() > 1 {
         return Err(ValidationError::EnforceSquashMerge);
     }
-    Ok(())
+    return Ok(());
 }
 
 fn _validate_body_max_line_length(
@@ -244,7 +244,7 @@ fn _validate_body_max_line_length(
         }
     }
 
-    Ok(())
+    return Ok(());
 }
 
 #[cfg(test)]

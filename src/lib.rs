@@ -1,4 +1,5 @@
 #![allow(clippy::needless_return)]
+#![deny(clippy::implicit_return)]
 
 pub mod loggers;
 pub mod structs;
@@ -26,10 +27,10 @@ pub fn get_hook(path: &str) -> Hook {
         .split('/')
         .collect::<Vec<&str>>()
         .iter()
-        .filter(|value| !value.is_empty())
+        .filter(|value| return !value.is_empty())
         .copied()
         .collect();
-    Hook::from(*parts.last().unwrap_or(&""))
+    return Hook::from(*parts.last().unwrap_or(&""));
 }
 
 pub fn get_stdin_data() -> String {
@@ -38,13 +39,13 @@ pub fn get_stdin_data() -> String {
     let mut stdin_handle = stdin.lock();
     stdin_handle.read_to_string(&mut stdin_input).unwrap();
     stdin_input = stdin_input.replace('\n', "");
-    stdin_input
+    return stdin_input;
 }
 
 pub fn get_repo_path(input: &str) -> String {
     // Remove everything after .git, if exists and return the first part.
     let parts: Vec<&str> = input.split(".git").collect();
-    format!("{}.git", parts[0])
+    return format!("{}.git", parts[0]);
 }
 
 #[cfg(test)]
