@@ -1,5 +1,4 @@
 #![allow(clippy::needless_return)]
-#![deny(clippy::implicit_return)]
 
 pub mod loggers;
 pub mod structs;
